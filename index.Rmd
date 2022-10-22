@@ -1,27 +1,19 @@
 ---
-title: "Responsiveness in immigration enforcement"
-author: "Angelo Dagonel (TF)"
-description: "County-level ICE compliance under constituent preferences and electoral dynamics"
+title: "Ex-felon Voter Disenfranchisement in Florida"
+author: "Isabella lenzo"
+description: "Examining the Effect of Constitutional Amendment 4 on Ex-felon Voter Registration in Florida"
 output:
   distill::distill_article:
     self_contained: false
 ---
 
-
-
 ## Project thoughts
 
-I am interested in exploring data related to immigration enforcement and immigration preferences. A working project with Asya Magazinnik (Massachusetts Institute of Technology) explores how county-level compliance of Sheriff's offices with ICE detainer requests relates to ideal point estimates of immigration preferences. Specifically: our project asks whether the public's immigration preferences, restrictive or accommodating, influences how local law enforcement agencies comply with bureaucratic delegation from ICE.
+I am interested in exploring data related to ex-felon voter registration in Florida and the effect Constitutional Amendment 4, a landmark constitutional amendment allowing felons to vote, has on voter suppression. A past project from Electionland (from ProPublica) measured how many felons were registered or eligible to vote since Amendment 4 took effect in January 2019 by comparing the Florida Department Corrections database of inmates released with Florida's list of registered voters in preparation of the 2020 presidential election. Their analyses found that fewer than 8% of Florida's felons have registered to vote since Amendment 4 in 2020. My project will continue to test whether the amendment influences ex-felon voter registration today, looking at ex-felons registration in the last month for the midterm elections. 
 
-To investigate this relationship, we are relying on data from three different sources:
+To investigate this relationship, I will be relying on data from the Florida Department Corrections database (I can scrape this data) and Florida's voter roll list, which I have access to from another course I am taking.
 
-1. [Transactional Records Access Clearinghouse (TRAC)](https://trac.syr.edu/immigration/) data on detainer requests sent to county Sheriff's offices from the Department of Homeland Security's sub-agency Immigration Customs and Enforcement (ICE);
 
-2. [Coooperative Election Study (CES)](https://cces.gov.harvard.edu/) data on immigration policy preferences; and
-
-3. novel data of county-level Sheriff elections and electoral type--partisan or non-partisan elections, non-electoral appointment.
-
-TRAC data provides us with our outcome variable, the proportion of ICE detainer requests that are complied with; CES data provides us with our explanatory variable, public immigration policy preferences; and the Sheriff electoral data provides us with a grouping variable.
 
 
 
