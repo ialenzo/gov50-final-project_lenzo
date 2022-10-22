@@ -11,7 +11,7 @@ output:
 
 I am interested in exploring data related to ex-felon voter registration in Florida and the effect Constitutional Amendment 4, a landmark constitutional amendment allowing felons to vote, has on voter suppression. A past project from Electionland (from ProPublica) measured how many felons were registered or eligible to vote since Amendment 4 took effect in January 2019 by comparing the Florida Department Corrections database of inmates released with Florida's list of registered voters in preparation of the 2020 presidential election. Their analyses found that fewer than 8% of Florida's felons have registered to vote since Amendment 4 in 2020. My project will continue to test whether the amendment influences ex-felon voter registration today, looking at ex-felons registration in the last month for the midterm elections. 
 
-To investigate this relationship, I will be relying on data from the Florida Department Corrections database (I can scrape this data) and Florida's voter roll list, which I have access to from another course I am taking.
+To investigate this relationship, I will be relying on data from the Florida Department Corrections database (I can scrape this data) and Florida's voter roll list, which I have access to from another course I am taking. 
 
 
 
