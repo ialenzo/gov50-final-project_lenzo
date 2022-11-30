@@ -27,8 +27,10 @@ goal to create a more equitable system
 ## Data Visualization
 ```{r}
 library(tidyverse)
-exinmates <- read.csv("released_ex-inmates.csv")
-exinmates
+released <- read.csv("released_inmates.csv")
+released
+
+
 
 ```
 
@@ -40,7 +42,11 @@ exinmates
 ## Final Project
 
 Introduction:
-Decades of research have found that US criminal courts sentence black defendants more harshly than whites. A striking 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. 
+
+Decades of research have shown that US criminal courts sentence black defendants more harshly than whites. A 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. The newspaper build a database of Florida's criminal judges to compare sentencing patterns. 
+
+Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. In the 1980s, the Florida Legislature tried to combat this issue by changing sentencing policies and creating sentencing guidelines. Today, prosecutors assign defendents points based on the type of crime, circumstances of arrest, and whether or not they have prior convictions to determine the minimum sentenced required by the law. The Herald-Tribune found that judges disregard these guidelines, sentencing black defendants to longer prison terms in 60% of felony 
+
 
 
 Data Section:
@@ -56,6 +62,6 @@ Results:
 
 
 Conclusion (limitatins/threats to inference)
-
+limitation - to consider whether ornot they have prior convictions, which drives longer sentences 
 
 
