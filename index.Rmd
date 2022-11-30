@@ -13,7 +13,46 @@ I am interested in exploring data related to ex-felon voter registration in Flor
 
 To investigate this relationship, I will be relying on data from the Florida Department Corrections database (I can scrape this data) and Florida's voter roll list, which I have access to from another course I am taking.
 
+## Proposal
 
+Does race affect prison sentence length? In this study, I plan to examine the degree to which punishment severity varies across race in Florida. I hypothesize that racial minorities are sentenced more harshly than whites. My sampl is comprised of . My unit of analysis 
+where sentence length continues to be associated with demographic factors. 
+
+
+
+They give blacks more time behind bars--sometimes double the sentences of whites accused of the same crimes under identical circumstances 
+goal to create a more equitable system 
+
+
+## Data Visualization
+```{r}
+
+```
+
+
+## Analysis
+
+
+
+## Final Project
+
+Introduction:
+Decades of research have found that US criminal courts sentence black defendants more harshly than whites. A striking 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. 
+
+
+Data Section:
+
+I sourced this data from the Florida Department of Correction's inmate release information search database. As Florida's largest state agency and the third largest state prison system in the country, the Florida Department of Corrections makes information and photographs of inmates who who either have been released or are scheduled to be released publicly available. This information is updated nightly.
+
+I scraped the following fields of information for each released inmate who has been released during or after 1997: name, DC Number, race, sex, birth date, custody, release date, aliases, state residence upon release, offense date, offense, sentence date, county, case number. 
+
+
+This research design is cross-sectional, comparing outcomes at one point in time.
+
+Results:
+
+
+Conclusion (limitatins/threats to inference)
 
 
 
