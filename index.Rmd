@@ -1,67 +1,137 @@
 ---
-title: "Ex-felon Voter Disenfranchisement in Florida"
+title: "Gov 50 Final Project"
 author: "Isabella lenzo"
-description: "Examining the Effect of Constitutional Amendment 4 on Ex-felon Voter Registration in Florida"
+description: ""
 output:
   distill::distill_article:
     self_contained: false
 ---
 
-## Project thoughts
-
-I am interested in exploring data related to ex-felon voter registration in Florida and the effect Constitutional Amendment 4, a landmark constitutional amendment allowing felons to vote, has on voter suppression. A past project from Electionland (from ProPublica) measured how many felons were registered or eligible to vote since Amendment 4 took effect in January 2019 by comparing the Florida Department Corrections database of inmates released with Florida's list of registered voters in preparation of the 2020 presidential election. Their analyses found that fewer than 8% of Florida's felons have registered to vote since Amendment 4 in 2020. My project will continue to test whether the amendment influences ex-felon voter registration today, looking at ex-felons registration in the last month for the midterm elections. 
-
-To investigate this relationship, I will be relying on data from the Florida Department Corrections database (I can scrape this data) and Florida's voter roll list, which I have access to from another course I am taking.
-
-## Proposal
-
-Does race affect prison sentence length? In this study, I plan to examine the degree to which punishment severity varies across race in Florida. I hypothesize that racial minorities are sentenced more harshly than whites. My sampl is comprised of . My unit of analysis 
-where sentence length continues to be associated with demographic factors. 
-
-
-
-They give blacks more time behind bars--sometimes double the sentences of whites accused of the same crimes under identical circumstances 
-goal to create a more equitable system 
-
-
-## Data Visualization
 ```{r}
+## Packages
 library(tidyverse)
-released <- read.csv("released_inmates.csv")
-released
-
-
-
+library(ggplot2)
+library(infer)
+library(dplyr)
+library(broom)
+library(modelsummary)
 ```
 
+```{r}
+#Data Modification/Simplication
 
-## Analysis
+released <- read_csv("released_inmates.csv") |>
+  mutate(
+    #Release year and month
+    suffix_release = substr(`Release Date`, nchar(`Release Date`)-1, nchar(`Release Date`)),
+    release_year = as.numeric(
+      paste0(
+        if_else(grepl("^[0-2]", suffix_release) == TRUE, 20, 19),
+        suffix_release)),
+    release_month = as.numeric(gsub("/.*$", "", `Release Date`)),
+   
+    #Sentence year and month
+    suffix_sentence = substr(`Sentence Date`, nchar(`Sentence Date`)-1, nchar(`Sentence Date`)),
+    sentence_year = as.numeric(
+      paste0(
+        if_else(grepl("^[0-2]", suffix_sentence) == TRUE, 20, 19),
+        suffix_sentence)
+    ),
+    sentence_month = as.numeric(gsub("/.*$", "", `Sentence Date`)),
+   
+    #Length of sentence
+    length_years = release_year - sentence_year,
+    length_months = release_month - sentence_month,
+    total_length = round(length_years + (length_months/12), 4), 
+    total_length = if_else(total_length == 0, 1/12, total_length),
+    i_black = if_else(Race == "BLACK", 1, 0),
+    prisoner_race = if_else(i_black == 1, "Black", "White"),
+    i_male = if_else(Sex == "MALE", 1, 0)) 
+```
 
-
-
-## Final Project
-
-Introduction:
+## Introduction
 
 Decades of research have shown that US criminal courts sentence black defendants more harshly than whites. A 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. The newspaper build a database of Florida's criminal judges to compare sentencing patterns. 
 
 Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. In the 1980s, the Florida Legislature tried to combat this issue by changing sentencing policies and creating sentencing guidelines. Today, prosecutors assign defendents points based on the type of crime, circumstances of arrest, and whether or not they have prior convictions to determine the minimum sentenced required by the law. The Herald-Tribune found that judges disregard these guidelines, sentencing black defendants to longer prison terms in 60% of felony 
 
 
+## Data and Research Design 
 
-Data Section:
+Data for this project is sourced from the Florida Department of Correction's inmate release information search database. As Florida's largest state agency and the third largest state prison system in the country, the Florida Department of Corrections makes information and photographs of inmates who who either have been released or are scheduled to be released publicly available. This information is updated nightly.
 
-I sourced this data from the Florida Department of Correction's inmate release information search database. As Florida's largest state agency and the third largest state prison system in the country, the Florida Department of Corrections makes information and photographs of inmates who who either have been released or are scheduled to be released publicly available. This information is updated nightly.
+I scraped a sample of the following fields of information for each released inmate who has been released during or after 1997: name, DC Number, race, sex, birth date, custody, release date, aliases, state residence upon release, offense date, offense, sentence date, county, case number. 
 
-I scraped the following fields of information for each released inmate who has been released during or after 1997: name, DC Number, race, sex, birth date, custody, release date, aliases, state residence upon release, offense date, offense, sentence date, county, case number. 
+This research design is cross-sectional, containing 21,957 ex-convicts to analyze the relationship between the main explanatory variables (race, sex, and county), and the outcome variable (prison sentence length). 
+
+This is the distribution of the outcome variable for all samples:
+
+```{r}
+#Distribution Plot of the Outcome
+ggplot(data = released, mapping = aes(x = total_length)) +
+  geom_histogram(aes(y = ..density..), colour = 1, fill = "white", binwidth = 2) +
+  labs(x = "Prison Sentence Length",
+       y = "Density",
+       title = "Distribution of Prison Sentence Length")
+
+```
+##Results 
+mean prison length by this binary explanatory variable 
+
+```{r}
+#Bivariate Plot
+released |>
+  group_by(prisoner_race) |>
+  summarize(mean = mean(total_length, na.rm = TRUE)) |>
+  ggplot(aes(x = prisoner_race, y = mean, fill = prisoner_race)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c('#999999','#E69F00')) +
+  labs(x = "Race", y = "Prison Sentence Length", title = "Prison Sentence Length by Prisoner Race", legend = "Race")
+```
+The bivariate plots 
+
+```{r}
+#bivariate regression
+b.lm1 <- lm(data = released, total_length ~ i_black) 
+
+b.lm1 |>
+  broom::tidy() |>
+  select(term, estimate) |>
+  knitr::kable(digits = 2)
+
+```
+The following regression is a bivariate model to analyze the relationship between the three main explanatory variables and the outcome variable with year and country fixed effects included but not shown in the final table.
+
+If a prisoner is black, there sentence increases by 0.61 years relative to a white prisoner. The intercept means that when there are only white prisoners, the prison sentence length is 2.67 years. 
+
+```{r}
+#multivariate plot
+m.lm1 <- lm(total_length ~ i_black + i_male + County, data = released) 
+
+m.lm1 |>
+  broom::tidy() |>
+  select(term, estimate) |>
+  knitr::kable(digits = 2)
+
+modelsummary::modelsummary(m.lm1, coef_map = c("i_black", "i_male"),
+                           statistic = c("s.e. = {std.error}",
+                                         "p = {p.value}"),
+                           gof_map = c("i_black", "nobs", "r.squared", "adj.r.squared"), stars = TRUE)
+```
 
 
-This research design is cross-sectional, comparing outcomes at one point in time.
+The following regression is a multivariate model to analyze the relationship between the two main explanatory variables and the outcome variable controlling for other features **. 
 
-Results:
+Each one unit increase in SI_rep_single leads to a x increase in prison sentence when holding all other variables constant. The relationship is statistically significant. 
+
+## Conclusion (limitatins/threats to inference) other variables 
+limitation - to consider whether ornot they have prior convictions, which drives longer sentences
 
 
-Conclusion (limitatins/threats to inference)
-limitation - to consider whether ornot they have prior convictions, which drives longer sentences 
-
-
+Summary of findings;
+Limitations of final project analyses;
+Possible improvements.
+#Next Steps 
+- shortcomings
+- if i had unlimited resources what would I do to improve: unethical randomized trial (explain importance of randomization for eliminating confounding variables)
+- what are potential confounders
