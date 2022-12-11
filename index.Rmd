@@ -1,13 +1,13 @@
 ---
-title: "Gov 50 Final Project"
+title: "Disparities in Prison Sentence Length by Race in Florida"
 author: "Isabella lenzo"
-description: ""
+description: "Is race associated with prison sentence length of ex-inmates who were released during or after 1997 in Florida?"
 output:
   distill::distill_article:
     self_contained: false
 ---
 
-```{r}
+```{r echo = FALSE}
 ## Packages
 library(tidyverse)
 library(ggplot2)
@@ -15,10 +15,11 @@ library(infer)
 library(dplyr)
 library(broom)
 library(modelsummary)
+library(kableExtra)
 ```
 
-```{r}
-#Data Modification/Simplication
+```{r echo = FALSE}
+#Data Modification
 
 released <- read_csv("released_inmates.csv") |>
   mutate(
@@ -45,93 +46,129 @@ released <- read_csv("released_inmates.csv") |>
     total_length = round(length_years + (length_months/12), 4), 
     total_length = if_else(total_length == 0, 1/12, total_length),
     i_black = if_else(Race == "BLACK", 1, 0),
-    prisoner_race = if_else(i_black == 1, "Black", "White"),
+    Race = if_else(i_black == 1, "Black", "White"),
     i_male = if_else(Sex == "MALE", 1, 0)) 
 ```
 
 ## Introduction
 
-Decades of research have shown that US criminal courts sentence black defendants more harshly than whites. A 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. The newspaper build a database of Florida's criminal judges to compare sentencing patterns. 
+Decades of research have shown that US criminal courts sentence black defendants more harshly than whites. A 2016 study by the Sarasota Herald-Tribune confirmed these sentencing disparities in the state of Florida. The newspaper build a database of Florida's criminal judges to compare sentencing patterns. Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. In the 1980s, the Florida Legislature tried to combat this issue by changing sentencing policies and creating sentencing guidelines. Today, prosecutors assign defendants points based on the type of crime, circumstances of arrest, and whether or not they have prior convictions to determine the minimum sentenced required by the law. The Herald-Tribune found that judges disregard these guidelines, sentencing black defendants to longer prison terms. 
 
-Their investigation exposed the fact that African-American defendants get more time behind bars when they commit the same crimes under identical circumstances. In the 1980s, the Florida Legislature tried to combat this issue by changing sentencing policies and creating sentencing guidelines. Today, prosecutors assign defendents points based on the type of crime, circumstances of arrest, and whether or not they have prior convictions to determine the minimum sentenced required by the law. The Herald-Tribune found that judges disregard these guidelines, sentencing black defendants to longer prison terms in 60% of felony 
-
+This working project furthers the Sarasota Herald-Tribune study, exploring how the race of defendants released during or after 1997 relates to prison sentence length. Specifically, my project asks whether race influences how judges sentence defendants. 
 
 ## Data and Research Design 
 
-Data for this project is sourced from the Florida Department of Correction's inmate release information search database. As Florida's largest state agency and the third largest state prison system in the country, the Florida Department of Corrections makes information and photographs of inmates who who either have been released or are scheduled to be released publicly available. This information is updated nightly.
+To investigate this relationship, this project relies on data scraped from one source:
 
-I scraped a sample of the following fields of information for each released inmate who has been released during or after 1997: name, DC Number, race, sex, birth date, custody, release date, aliases, state residence upon release, offense date, offense, sentence date, county, case number. 
+  1. [Florida Department of Corrections Inmate Release Information Database](http://www.dc.state.fl.us/offendersearch/Search.aspx?TypeSearch=IR) data on released inmates during or after 1997
 
-This research design is cross-sectional, containing 21,957 ex-convicts to analyze the relationship between the main explanatory variables (race, sex, and county), and the outcome variable (prison sentence length). 
+  As Florida's largest state agency and the third largest state prison system in the country, the Florida Department of Corrections makes information and photographs of inmates who who either have been released or are scheduled to be released publicly available. This information is updated nightly.
 
-This is the distribution of the outcome variable for all samples:
+This research design is cross-sectional, observing 21,957 unique ex-convicts who were released during or after 1997 to analyze the relationship between the main explanatory variables (race, county, offense), and the outcome variable (prison sentence length); it makes no causal assumptions or claims.
 
-```{r}
-#Distribution Plot of the Outcome
+This is not the full population of inmates that were released during or after 1997. This team who scraped the data conducted a random sample from the Florida Department of Corrections Inmate Release database due to resource constraints. Thus, because this was a random sample, there should be very little bias between results from the sample and the full population.  
+
+Florida Department of Corrections Inmate Release data provides the date in which the inmate was sentenced and the date in which the inmate was released. This data determines our outcome variable: prison sentence length in years. The prison sentence length ranges from `r min(released$total_length, na.rm = TRUE)` to `r max(released$total_length, na.rm = TRUE)`, with a median of `r round(median(released$total_length, na.rm = TRUE))` and a mean of `r round(mean(released$total_length, na.rm = TRUE))`. It also provides us with our explanatory variables: i_black, indicator variable for whether the released inmate is black (1) or white (0); county, one of the 67 Floridian counties where the prisoner was sentenced; and offense, the type of crime the defendant committed, which includes over 600 types that Florida determines. 
+
+The following distribution of the outcome variable is right-skewed. The majority of defendants are sentenced to prison for less than a year (i.e. could be as little as seven days). Because the outcome variable is calculated in terms of years, the data is centered just above zero. The median of the data of 2 is pushed to the left side of the distribution, whereas the mean of 3 is pushed to the right side of the distribution due to the presence of outliers that make up the right tail of the distribution. These outliers indicate longer prison sentences that could be a result of the offense. 
+
+```{r echo = FALSE}
 ggplot(data = released, mapping = aes(x = total_length)) +
-  geom_histogram(aes(y = ..density..), colour = 1, fill = "white", binwidth = 2) +
-  labs(x = "Prison Sentence Length",
+  geom_histogram(aes(y = ..density..), colour = 1, fill = "grey50", binwidth = 2) +
+  theme_bw() +
+  labs(x = "Prison Sentence Length (Years)",
        y = "Density",
-       title = "Distribution of Prison Sentence Length")
+       title = "Distribution of Prison Sentence Lengths", 
+       caption = "Source: Florida Department of Corrections") +
+   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-##Results 
-mean prison length by this binary explanatory variable 
 
-```{r}
+## Results 
+
+Before regressing the prison length sentence on race, county, and offense, the bivariate relationship between these variables can be visualized with a bar plot. The bar chart below plots race on the x-axis and average prison sentence length in years on the y-axis. 
+
+```{r echo = FALSE}
 #Bivariate Plot
 released |>
-  group_by(prisoner_race) |>
+  group_by(Race) |>
   summarize(mean = mean(total_length, na.rm = TRUE)) |>
-  ggplot(aes(x = prisoner_race, y = mean, fill = prisoner_race)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values=c('#999999','#E69F00')) +
-  labs(x = "Race", y = "Prison Sentence Length", title = "Prison Sentence Length by Prisoner Race", legend = "Race")
+  ggplot(aes(x = Race, y = mean, fill = Race)) +
+  geom_bar(stat = "identity", binwidth = 5) + 
+  geom_text(aes(label = round(mean, digits = 2)), vjust = -1) +
+  scale_fill_grey(start=0.4, end = 0.8) +
+  theme_bw() +
+  guides(title = "Race") +
+  scale_y_continuous(limits = c(0, 4)) +
+  labs(x = "Race", 
+       y = "Average Prison Sentence Length (Years)", 
+       title = "Average Prison Sentence Length by Race of Prisoner", 
+       caption = "Source: Florida Department of Corrections") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
-The bivariate plots 
+The bivariate plot suggests that average prison sentence length for black inmates is 3.28 versus 2.67 for white inmates, indicating black inmates have a higher average prison sentence length compared to white inmates. The regression analysis will offer more detailed information about this result. 
 
-```{r}
-#bivariate regression
+The following bivariate regression is below, confirming that the average prison sentence for white ex-inmates was 2.67 years and for black ex-inmates was 2.67 + 0.61, which is 3.28 years. 
+
+```{r echo = FALSE}
+#Bivariate regression
 b.lm1 <- lm(data = released, total_length ~ i_black) 
 
 b.lm1 |>
   broom::tidy() |>
   select(term, estimate) |>
-  knitr::kable(digits = 2)
-
+  knitr::kable(digits = 2, col.names = c("Term", "Estimated Coefficient"))
 ```
-The following regression is a bivariate model to analyze the relationship between the three main explanatory variables and the outcome variable with year and country fixed effects included but not shown in the final table.
 
-If a prisoner is black, there sentence increases by 0.61 years relative to a white prisoner. The intercept means that when there are only white prisoners, the prison sentence length is 2.67 years. 
+**Regression Results**
 
-```{r}
-#multivariate plot
-m.lm1 <- lm(total_length ~ i_black + i_male + County, data = released) 
+Results from the multivariate regression model are below. The multivariate model analyzes the relationship between the three main explanatory variables (race, county, and offense) and the outcome variable (prison sentence length) with county and offense fixed effects included but not shown in the final table for brevity (there are 67 counties and 600 types of offenses).
 
-m.lm1 |>
-  broom::tidy() |>
-  select(term, estimate) |>
-  knitr::kable(digits = 2)
+Regression results show that a statistically significant correlation exists between the race of the inmate and their prison sentence length. 
 
-modelsummary::modelsummary(m.lm1, coef_map = c("i_black", "i_male"),
+```{r echo = FALSE}
+#Multivariate plot
+m.lm1 <- lm(total_length ~ i_black + County + Offense, data = released) 
+
+#Regression Results Table 
+# m.lm1 |>
+#   broom::tidy() |>
+#   select(term, estimate) |>
+#   knitr::kable(digits = 2)
+
+modelsummary::modelsummary(m.lm1, coef_map = c("(Intercept)", "i_black"),
                            statistic = c("s.e. = {std.error}",
                                          "p = {p.value}"),
-                           gof_map = c("i_black", "nobs", "r.squared", "adj.r.squared"), stars = TRUE)
+                           gof_map = c("Intercept", "i_black", "nobs", "r.squared", "adj.r.squared"), stars = TRUE)
 ```
+The multivariate model suggests that, for black prisoners, their sentence is, on average, 0.502 years longer compared to a white prisoner, when holding county and offense constant. I used county fixed effects to control for the variation in counties because each of the 67 county courts has a different judge who determines a defendant's prison sentence length. The intercept means that for white prisoners in our reference county (Alachua) and our reference offense (transmitting over 100k), the average prison sentence length is 1.178 years.
 
+The value of $R^2$ means that 26% of the observed variation in prison sentence length can be explained by race, county, and offense. 
 
-The following regression is a multivariate model to analyze the relationship between the two main explanatory variables and the outcome variable controlling for other features **. 
+**Statistical Significance**
 
-Each one unit increase in SI_rep_single leads to a x increase in prison sentence when holding all other variables constant. The relationship is statistically significant. 
+In the multivariate model, the relationship between the race of the inmate (i.e. being black) and prison sentence length is statistically significant. The p-value on the i_black coefficient is close to 0 (<0.001), so at the test level $\alpha$ = 0.05, our result is statistically significant, indicating that the null hypothesis that race and prison sentence length are not associated can be rejected. The coefficient’s p-value of near 0 would suggest there is a near 0% probability that the observed estimated association is as extreme as any estimated association from the null distribution (assuming that race is not associated with prison sentence length). Because the co-efficient of 0.502 is positive, we can be highly confident that the true association between being a black prisoner (as opposed to being white) and prison sentence length is positive. 
 
-## Conclusion (limitatins/threats to inference) other variables 
-limitation - to consider whether ornot they have prior convictions, which drives longer sentences
+**Causality and Confounders**
 
+Most researchers would want to state that racist judges are more likely to mete out longer sentences to black offenders: the nature of punishment in the US is not based on a rational analysis of incarceration and the fundamental objectives of sentencing policy. However, the race variable cannot be treated as a "treatment" variable because this explanatory variable was not randomly assigned. Race cannot be said to causally increase prison sentence length; rather, the two phenomenon are positively associated with each other, with this estimate association being statistically significant. 
 
-Summary of findings;
-Limitations of final project analyses;
-Possible improvements.
-#Next Steps 
-- shortcomings
-- if i had unlimited resources what would I do to improve: unethical randomized trial (explain importance of randomization for eliminating confounding variables)
-- what are potential confounders
+My multivariate model attempts to control one possible confounder: county in which they were sentenced. Different county court judges sentence the defendants by county. Court county judge bias, captured by the covariate of county, could influence the length of the prison sentence a defendant receives if a more racist judge makes that decision. This variable is constant across inmates: the county in which they were sentenced; this variable doesn't change as it has fixed effects. In addition, the model also attempts to control the offense, the nature of the crime itself, as another possible confounder, which could drive longer prison sentences. 
+
+Other possible confounders exist, but were excluded from the model due to data unavailability. For example: other confounders could be the defendant's criminal history, the previous crimes in which they were convicted of, and whether they committed the same crime before, which could influence judges to decide and sentence the defendant to a longer prison sentence, and could be plausibly associated with race. Defendants previously convicted of felonies could be more likely to serve more time in prison. 
+
+## Conclusion 
+
+**Summary of Findings**
+
+The regression results demonstrate that being a black defendant is positively and significantly associated with longer prison sentences. Adding county-level fixed effects helped to control for any county-specific idiosyncrasies; however, a defendant's previous criminal history can also be the decider of these outcomes. A multivariate model that controls for these possibly influential covariates and confounders, such as the ones not included in the model above, could produce an even larger estimate of this association.  
+
+**Limitations**
+
+My analysis is limited by having a somewhat incomplete sample from the inmate pool as well as from county information. The first limitation relates to the fact that I do not have information on the county court judge who sentenced the unique defendant. This is because some of the counties don't catalog which county court judges sentence the defendants and whether they have cycled new judges during this time period from 1997. It is also even more difficult to catalog information about the defendants themselves, including their criminal history and whether they comittted the same crime. 
+
+**Next Steps**
+
+To improve upon the current analysis with additional resources, I could build a dataset of the unique judges that sentenced the unique defendants by county in order to include judge fixed effects, accounting for the judges' political preferences, their "tough on crime" views, their ruling history etc. In addition, we include an interaction term judge:i_black, which would allow for the effect of being black on prison sentence length to vary by judge. This analysis could help us identify judges that are extremely biased in their sentencing by race. Adding the interaction terms measures the effect of being black on sentence length by judge, which allows us to rank the judges by how biased they are towards defendants with different races. 
+
+A different further experiment could be examining whether the judges political ideology affects the disparity of prison sentence by race to discover a measure of a deeper commonality. Instead of assigning a categorical variable for each judge, we could include a numerical ideology score. One important distinction here is that a lot of measures for ideology are determined after a judge is appointed to a county court seat, but because sentencing is the variable we are interested in looking at, we may want to instead look at indications of their ideology before they are assigned the seat, so as to prevent possible problems of endogeneity. There are other commonalities that produce this effect and help to explain the disparity such as the judge's gender, the judge's race, the amount of children they have, their religious preferences, their home states and counties. All of these could be further avenues for research.
